@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from datamoshers import add_subparsers, parse_args
+import random
 import pathlib
 import argparse
-import numpy as np
 
 def main(args):
     if args.seed is None:
-        args.seed = np.random.randint(0, 10000000)
+        args.seed = random.randint(0, 10000000)
         print("Seed:", args.seed)
     datamosher = parse_args(args.datamosher, args)
     datamosher.datamosh()
