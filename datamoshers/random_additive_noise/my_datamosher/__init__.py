@@ -33,9 +33,14 @@ class MyDatamosher(Datamosher):
         return np.bitwise_xor(to_write, rand_data)
 
 
-def add_arguments(ap: argparse.ArgumentParser):
-    ap.add_argument("a", type=int)
-    ap.add_argument("b", type=int)
+def add_subparser_definitions(str_datamosher: str,
+                              subparsers: argparse._SubParsersAction):
+    ap = subparsers.add_parser(str_datamosher, description="""\
+Using LCG (https://en.wikipedia.org/wiki/Linear_congruential_generator),
+generate random data and bitwise_xor them with the input data bytes.
+Mostly useless tbh.""")
+    ap.add_argument("a", type=int, help="The LCG multiplier")
+    ap.add_argument("b", type=int, help="The LCG increment")
 
 def parse_args(args: argparse.Namespace):
     return MyDatamosher(args.a, args.b,

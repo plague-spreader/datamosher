@@ -34,8 +34,11 @@ class MyRNG:
         return self.rng.integers(256, size=(num_bytes,),dtype=np.uint8)
 
 
-def add_arguments(ap: argparse.ArgumentParser):
-    pass
+def add_subparser_definitions(str_datamosher: str,
+                              subparser: argparse._SubParsersAction):
+    subparser.add_parser(str_datamosher, description="""\
+This datamosher will just generate random numbers and bitwise_xor them with the
+bytes of the input file""")
 
 def parse_args(args: argparse.Namespace):
     return RandomDatamosher(MyRNG(args.seed),

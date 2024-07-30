@@ -47,9 +47,8 @@ def add_subparsers(subparsers: argparse._SubParsersAction):
         if str_datamosher == "datamoshers/__init__.py":
             continue
         str_datamosher = str_datamosher[12:-12].replace("/", ".")
-        subparser = subparsers.add_parser(str_datamosher)
         lib = importlib.import_module("datamoshers." + str_datamosher)
-        lib.add_arguments(subparser)
+        lib.add_subparser_definitions(str_datamosher, subparsers)
 
 def parse_args(str_datamosher: str, args: argparse.Namespace) -> Datamosher:
     lib = importlib.import_module("datamoshers." + str_datamosher)

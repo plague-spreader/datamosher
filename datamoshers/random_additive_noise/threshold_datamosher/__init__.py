@@ -42,11 +42,13 @@ class RNG:
 
 
 class UniformRNG(RNG):
-    def __init__(self, *, seed, interval: Interval):
+    def __init__(self, lower, upper, *, seed, interval: Interval):
         super().__init__(seed=seed, interval=interval)
+        self._lower = lower
+        self._upper = upper
 
     def _generate_random_bits(self, num_bytes: int):
-        return self.rng.uniform(size=(num_bytes, 8))
+        return self.rng.uniform(self._lower, self._upper, size=(num_bytes, 8))
 
 
 class ExponentialRNG(RNG):
@@ -70,24 +72,43 @@ class GaussianRNG(RNG):
                                 size=(num_bytes, 8))
 
 
-def add_arguments(ap: argparse.ArgumentParser):
-    ap.add_argument("left_probability_threshold", type=float)
-    ap.add_argument("right_probability_threshold", type=float)
-    distribution = ap.add_subparsers(dest="distribution")
+def add_subparser_definitions(str_datamosher: str,
+                              subparser: argparse._SubParsersAction):
+    ap = subparser.add_parser(str_datamosher, description="""\
+Generate random bits using some distribution (3rd parameter) and set the bits
+to 1 whether the distribution samples are between the 1st and 2nd parameter
+float values""")
+    ap.add_argument("left_probability_threshold", type=float,
+                    help="The left threshold. Can be inf, -inf and nan")
+    ap.add_argument("right_probability_threshold", type=float,
+                    help="The right threshold. Can be inf, -inf and nan")
+    distribution = ap.add_subparsers(dest="distribution",
+                                     help="The distribution to use")
     distribution.required = True
-    distribution.add_parser("uniform")
-    exponential = distribution.add_parser("exponential")
-    exponential.add_argument("mean", type=float)
-    gaussian = distribution.add_parser("gaussian")
-    gaussian.add_argument("mean", type=float)
-    gaussian.add_argument("stddev", type=float)
+    uniform = distribution.add_parser("uniform",
+                                      help="Uniform random variable")
+    uniform.add_argument("--lower", type=float, default=0,
+                         help="Lower bound. Default=0")
+    uniform.add_argument("--upper", type=float, default=1,
+                         help="Upper bound. Default=1")
+    exponential = distribution.add_parser("exponential",
+                                          help="Exponential random variable")
+    exponential.add_argument("--mean", type=float, default=1,
+                             help="The mean value i.e. 1/lambda. Default=1")
+    gaussian = distribution.add_parser("gaussian",
+                                       help="Gaussian/Normal random variable")
+    gaussian.add_argument("--mean", type=float, default=0,
+                          help="The mean value. Default=0")
+    gaussian.add_argument("--stddev", type=float, default=1,
+                          help="The standard deviation. Default=1")
 
 def parse_args(args: argparse.Namespace):
     rng = None
     interval = Interval(args.left_probability_threshold,
                         args.right_probability_threshold)
     if args.distribution == "uniform":
-        rng = UniformRNG(seed=args.seed, interval=interval)
+        rng = UniformRNG(args.lower, args.upper,
+                         seed=args.seed, interval=interval)
     elif args.distribution == "exponential":
         rng = ExponentialRNG(args.mean, seed=args.seed, interval=interval)
     elif args.distribution == "gaussian":
